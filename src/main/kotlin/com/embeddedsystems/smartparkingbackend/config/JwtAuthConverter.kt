@@ -29,11 +29,11 @@ class JwtAuthConverter: Converter<Jwt, AbstractAuthenticationToken> {
     override fun convert(source: Jwt): AbstractAuthenticationToken? {
         val resourceAccess = source.getClaim<Map<String, Any>>("resource_access")
 
-        if (resourceAccess == null || !resourceAccess.containsKey("betting")) {
+        if (resourceAccess == null || !resourceAccess.containsKey("parking")) {
             return getBasicAuthToken(source)
         }
 
-        val bettingApp = resourceAccess["betting"] as Map<String, String>
+        val bettingApp = resourceAccess["parking"] as Map<String, String>
         val roles = bettingApp["roles"] as List<String>?
             ?: return getBasicAuthToken(source)
 
