@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        IMAGE_NAME = 'gonemesis/SIParkingBackend'
+        IMAGE_NAME = 'gonemesis/si-parking-backend'
     }
     stages {
         stage('Build') {
