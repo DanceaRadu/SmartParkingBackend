@@ -11,5 +11,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:3000/realms/smart-parking
-          jwk-set-uri: http://localhost:3000/realms/smart-parking/protocol/openid-connect/certs
+          issuer-uri: https://keycloak.gonemesis.org/realms/parkingSI
+          jwk-set-uri: https://keycloak.gonemesis.org/realms/parkingSI/protocol/openid-connect/certs
