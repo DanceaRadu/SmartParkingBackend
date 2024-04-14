@@ -1,13 +1,12 @@
 package com.embeddedsystems.smartparkingbackend.controller
 
+import com.embeddedsystems.smartparkingbackend.dto.UserProfileDTO
 import com.embeddedsystems.smartparkingbackend.service.UserProfileService
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
-@RestController("/user-profile")
+@RestController
+@RequestMapping("/api/v1/user-profile")
 class UserProfileController(private val userProfileService: UserProfileService) {
 
         @PostMapping
@@ -15,14 +14,14 @@ class UserProfileController(private val userProfileService: UserProfileService) 
 
         }
 
-        @GetMapping
-        fun getUserById() {
-
-        }
-
         @GetMapping("/me")
-        fun getMyUserProfile(authentication: Authentication) =
-            userProfileService.getMyUserProfile(authentication.name)
+        fun getMyUserProfile(authentication: Authentication): UserProfileDTO =
+                userProfileService.getMyUserProfile(authentication)
+
+        @GetMapping("/{userId}")
+        fun getUserById(@PathVariable userId: Long): UserProfileDTO =
+                userProfileService.getUserById(userId)
+
 
         @DeleteMapping
         fun delete() {

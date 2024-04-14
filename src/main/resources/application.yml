@@ -13,3 +13,6 @@ spring:
         jwt:
           issuer-uri: https://keycloak.gonemesis.org/realms/parkingSI
           jwk-set-uri: https://keycloak.gonemesis.org/realms/parkingSI/protocol/openid-connect/certs
+cors:
+  origin:
+    url: http://localhost:4200
