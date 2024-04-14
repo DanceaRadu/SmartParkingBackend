@@ -7,12 +7,14 @@ data class UserProfile(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    var id: Long? = 0,
 
     @Column(unique = true, nullable = false)
     var keycloakId: String,
 
     var username: String,
+
+    var email: String,
 
     @OneToOne
     var subscription: Subscription? = null,
