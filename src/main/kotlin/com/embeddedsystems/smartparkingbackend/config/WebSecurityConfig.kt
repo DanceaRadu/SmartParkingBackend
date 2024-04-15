@@ -26,7 +26,7 @@ class WebSecurityConfig {
                     configuration.allowedOrigins = listOf(corsOriginUrl)
                     configuration.allowedMethods = listOf("GET", "POST", "DELETE", "PUT", "PATCH")
                     configuration.allowedHeaders = listOf("*")
-
+                    configuration.allowCredentials = true
                     configuration
                 }
             }
