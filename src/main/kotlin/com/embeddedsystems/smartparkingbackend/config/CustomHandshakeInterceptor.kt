@@ -16,7 +16,7 @@ class CustomHandshakeInterceptor : HandshakeInterceptor {
         wsHandler: WebSocketHandler,
         attributes: MutableMap<String, Any>
     ): Boolean {
-        response.setStatusCode(HttpStatusCode.valueOf(201))
+        response.setStatusCode(HttpStatusCode.valueOf(101))
         return true
     }
 
