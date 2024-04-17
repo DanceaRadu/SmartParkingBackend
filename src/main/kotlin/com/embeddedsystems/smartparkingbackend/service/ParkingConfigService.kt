@@ -1,18 +1,18 @@
 package com.embeddedsystems.smartparkingbackend.service
 
+import com.embeddedsystems.smartparkingbackend.config.WebSocketHandler
 import com.embeddedsystems.smartparkingbackend.dto.ParkingConfigDTO
 import com.embeddedsystems.smartparkingbackend.entity.ParkingConfig
 import com.embeddedsystems.smartparkingbackend.repository.ParkingConfigRepository
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
+
 
 @Service
 class ParkingConfigService(
     private val parkingConfigRepository: ParkingConfigRepository,
-    private val messagingTemplate: SimpMessagingTemplate
+    private val webSocketHandler: WebSocketHandler
 ) {
-
     fun getLatestParkingConfig(): ParkingConfigDTO {
         val configList = parkingConfigRepository.getConfigsOrderedByTime()
         if (configList.isEmpty()) {
@@ -29,14 +29,11 @@ class ParkingConfigService(
                 false
             )
         }
-
         return ParkingConfigDTO(configList[0])
     }
 
     fun updateCurrentParkingConfig(parkingConfigDTO: ParkingConfigDTO) {
-        val updatedConfig = parkingConfigRepository.save(
-            ParkingConfig(parkingConfigDTO)
-        )
-        messagingTemplate.convertAndSend("/topic/parking-config", ParkingConfigDTO(updatedConfig))
+        parkingConfigRepository.save(ParkingConfig(parkingConfigDTO))
+        webSocketHandler.sendUpdatedConfigToAll()
     }
 }

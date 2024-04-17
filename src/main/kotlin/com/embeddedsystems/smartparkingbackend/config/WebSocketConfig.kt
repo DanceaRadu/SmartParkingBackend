@@ -1,26 +1,16 @@
 package com.embeddedsystems.smartparkingbackend.config
 
 import org.springframework.context.annotation.Configuration
-import org.springframework.messaging.simp.config.MessageBrokerRegistry
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer
-import org.springframework.web.socket.server.support.DefaultHandshakeHandler
+import org.springframework.web.socket.config.annotation.EnableWebSocket
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
-@EnableWebSocketMessageBroker
 @Configuration
-class WebSocketConfig: WebSocketMessageBrokerConfigurer {
-    override fun registerStompEndpoints(registry: StompEndpointRegistry) {
+@EnableWebSocket
+class WebSocketConfig(val webSocketHandler: WebSocketHandler) : WebSocketConfigurer {
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         registry
-            .addEndpoint("/config")
+            .addHandler(webSocketHandler, "/config")
             .setAllowedOriginPatterns("*")
-            .setHandshakeHandler(DefaultHandshakeHandler())
-            .addInterceptors(CustomHandshakeInterceptor())
-            .withSockJS()
-    }
-
-    override fun configureMessageBroker(registry: MessageBrokerRegistry) {
-        registry.enableSimpleBroker("/topic")
-        registry.setApplicationDestinationPrefixes("/app")
     }
 }
