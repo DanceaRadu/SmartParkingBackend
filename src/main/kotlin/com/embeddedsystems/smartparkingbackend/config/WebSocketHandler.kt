@@ -23,6 +23,7 @@ class WebSocketHandler(
 
     @Throws(Exception::class)
     override fun afterConnectionEstablished(session: WebSocketSession) {
+        sessions.add(session)
         session.sendMessage(
             TextMessage(
                 mapper.writeValueAsString(getLatestConfig())
@@ -46,7 +47,7 @@ class WebSocketHandler(
         System.err.println("Error in WebSocket communication: ${exception.message}")
     }
 
-    fun sendMessageToAll(message: String) {
+    fun sendUpdatedConfigToAll() {
         sessions.forEach { session ->
             if (session.isOpen) {
                 try {

@@ -29,14 +29,11 @@ class ParkingConfigService(
                 false
             )
         }
-
         return ParkingConfigDTO(configList[0])
     }
 
     fun updateCurrentParkingConfig(parkingConfigDTO: ParkingConfigDTO) {
-        val updatedConfig = parkingConfigRepository.save(
-            ParkingConfig(parkingConfigDTO)
-        )
-        webSocketHandler.sendMessageToAll(updatedConfig.toString())
+        parkingConfigRepository.save(ParkingConfig(parkingConfigDTO))
+        webSocketHandler.sendUpdatedConfigToAll()
     }
 }
