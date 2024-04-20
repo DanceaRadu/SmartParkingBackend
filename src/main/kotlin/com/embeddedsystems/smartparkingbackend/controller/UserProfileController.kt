@@ -1,6 +1,7 @@
 package com.embeddedsystems.smartparkingbackend.controller
 
 import com.embeddedsystems.smartparkingbackend.dto.UserProfileDTO
+import com.embeddedsystems.smartparkingbackend.dto.UserRegistrationDTO
 import com.embeddedsystems.smartparkingbackend.service.UserProfileService
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
@@ -9,10 +10,6 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/user-profile")
 class UserProfileController(private val userProfileService: UserProfileService) {
 
-        @PostMapping
-        fun create() {
-
-        }
 
         @GetMapping("/me")
         fun getMyUserProfile(authentication: Authentication): UserProfileDTO =
@@ -23,8 +20,8 @@ class UserProfileController(private val userProfileService: UserProfileService) 
                 userProfileService.getUserById(userId)
 
 
-        @DeleteMapping
-        fun delete() {
+        @PostMapping("/register")
+        fun registerNewUser(@RequestBody userRegistrationDTO: UserRegistrationDTO) =
+                userProfileService.registerNewUser(userRegistrationDTO)
 
-        }
 }
