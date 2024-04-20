@@ -16,3 +16,7 @@ spring:
 cors:
   origin:
     url: http://localhost:4200
+keycloak:
+  username: username
+  password: password
+  url: https://keycloak.gonemesis.org

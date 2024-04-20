@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface UserProfileRepository: JpaRepository<UserProfile, Long> {
     fun findByKeycloakId(keycloakId: String): UserProfile?
+    fun existsByUsername(username: String): Boolean
 }
