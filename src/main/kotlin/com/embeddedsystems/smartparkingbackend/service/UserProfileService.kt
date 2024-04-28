@@ -20,7 +20,8 @@ import org.springframework.web.client.RestTemplate
 
 @Service
 class UserProfileService(
-    private val userProfileRepository: UserProfileRepository
+    private val userProfileRepository: UserProfileRepository,
+    private val stripeService: StripeService
 ) {
 
     @Value("\${keycloak.username}")
@@ -88,8 +89,9 @@ class UserProfileService(
             val newUserProfile = UserProfile(
                 keycloakId = authentication.name,
                 username = getUserNameFromKeycloakAuthentication(authentication),
-                email = getEmailFromKeycloakAuthentication(authentication)
+                email = getEmailFromKeycloakAuthentication(authentication),
             )
+            newUserProfile.stripeCustomerId = stripeService.createStripeCustomer(newUserProfile)
             UserProfileDTO(userProfileRepository.save(newUserProfile))
         }
     }
