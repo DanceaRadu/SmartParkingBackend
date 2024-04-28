@@ -16,6 +16,9 @@ data class UserProfile(
 
     var email: String,
 
+    @Column(nullable = false)
+    var stripeCustomerId: String? = null,
+
     @OneToOne
     var subscription: Subscription? = null,
 )

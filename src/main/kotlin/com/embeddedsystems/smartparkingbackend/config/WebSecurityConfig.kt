@@ -40,6 +40,9 @@ class WebSecurityConfig {
                     .requestMatchers("/api/v1/user-profile/me").authenticated()
                     .requestMatchers("/api/v1/user-profile/**").permitAll()
 
+                    .requestMatchers("/api/v1/payment/subscription/updates").permitAll()
+                    .requestMatchers("/api/v1/payment/**").authenticated()
+
                     .requestMatchers("/api/v1/parking-config/**").permitAll()
                     .requestMatchers("/config/**").permitAll()
 

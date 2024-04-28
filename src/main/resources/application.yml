@@ -20,3 +20,7 @@ keycloak:
   username: username
   password: password
   url: https://keycloak.gonemesis.org
+stripe:
+  public-key: key
+  secret-key: key
+  webhook-secret: key
