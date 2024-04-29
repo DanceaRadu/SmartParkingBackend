@@ -7,6 +7,7 @@ class UserProfileDTO(
     val keycloakId: String?,
     val username: String?,
     val email: String?,
+    val stripeCustomerId: String,
     val subscription: SubscriptionDTO?,
 ) {
 
@@ -15,6 +16,7 @@ class UserProfileDTO(
         keycloakId = userProfile.keycloakId,
         username = userProfile.username,
         email = userProfile.email,
+        stripeCustomerId = userProfile.stripeCustomerId ?: "",
         subscription = userProfile.subscription?.let { SubscriptionDTO(it) }
     )
 }

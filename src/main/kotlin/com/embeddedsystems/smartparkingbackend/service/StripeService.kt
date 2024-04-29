@@ -6,11 +6,13 @@ import com.embeddedsystems.smartparkingbackend.exceptions.types.EntityNotFoundBy
 import com.embeddedsystems.smartparkingbackend.repository.UserProfileRepository
 import com.stripe.exception.StripeException
 import com.stripe.model.Customer
+import com.stripe.model.EphemeralKey
 import com.stripe.model.Event
 import com.stripe.model.Subscription
 import com.stripe.net.Webhook
 import com.stripe.param.CustomerCreateParams
 import com.stripe.param.CustomerUpdateParams
+import com.stripe.param.EphemeralKeyCreateParams
 import com.stripe.param.SubscriptionCreateParams
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
@@ -24,7 +26,7 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
     @Value("\${stripe.webhook-secret}")
     lateinit var endpointSecret: String
 
-    fun createSubscriptionIntent(paymentInfo: PaymentInfo, keycloakId: String): Subscription {
+    fun createSubscriptionIntent(paymentInfo: PaymentInfo, keycloakId: String): String {
         val userProfile = userProfileRepository.findByKeycloakId(keycloakId)
             ?: throw EntityNotFoundByNameException("User Profile", keycloakId)
 
@@ -43,7 +45,7 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
             .putAllMetadata(metadata)
             .build()
 
-        return Subscription.create(subscriptionParams)
+        return Subscription.create(subscriptionParams).id
     }
 
     fun attachPaymentMethodToCustomer(paymentMethodId: String, keycloakId: String) {
@@ -63,6 +65,20 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
             customer.update(params)
         } catch (e: StripeException) {
             e.printStackTrace()
+        }
+    }
+
+    fun createEphemeralKey(customerId: String?): ResponseEntity<String> {
+        try {
+            val params = EphemeralKeyCreateParams.builder()
+                .setCustomer(customerId)
+                .setStripeVersion("2024-04-10")
+                .build()
+
+            val key = EphemeralKey.create(params)
+            return ResponseEntity.ok(key.toJson())
+        } catch (e: StripeException) {
+            return ResponseEntity.status(500).body("Failed to create ephemeral key: " + e.message)
         }
     }
 
@@ -105,5 +121,10 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
         }
 
         return ResponseEntity.ok("Event received")
+    }
+
+    fun hasDefaultPaymentMethod(customerId: String): Boolean {
+        val customer = Customer.retrieve(customerId)
+        return customer.invoiceSettings.defaultPaymentMethod != null
     }
 }
