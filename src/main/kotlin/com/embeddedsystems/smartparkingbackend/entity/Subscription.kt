@@ -1,5 +1,6 @@
 package com.embeddedsystems.smartparkingbackend.entity
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
 
 @Entity
@@ -8,6 +9,16 @@ data class Subscription(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
 
-    @OneToOne(cascade = [CascadeType.ALL])
-    var userProfile: UserProfile
+    @ManyToOne
+    @JsonManagedReference
+    var userProfile: UserProfile,
+
+    var licencePlate: String,
+
+    var isActive: Boolean = false,
+
+    var stripePriceId: String,
+
+    @Column(unique = true)
+    var stripeSubscriptionId: String,
 )

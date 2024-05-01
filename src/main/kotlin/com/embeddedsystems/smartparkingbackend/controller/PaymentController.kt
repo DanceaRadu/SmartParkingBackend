@@ -19,17 +19,4 @@ class PaymentController(private val stripeService: StripeService) {
     @PostMapping("/subscription/updates")
     fun handleSubscriptionUpdates(@RequestBody payload: String, request: HttpServletRequest): ResponseEntity<String> =
         stripeService.handleSubscriptionUpdates(payload, request)
-
-    @PutMapping("/payment-method/{paymentMethodId}")
-    fun attachPaymentMethodToCustomer(@PathVariable paymentMethodId: String, authentication: Authentication) =
-        stripeService.attachPaymentMethodToCustomer(paymentMethodId, authentication.name)
-
-    @GetMapping("/ephemeral-key/{customerId}")
-    fun createEphemeralKey(@PathVariable customerId: String?): ResponseEntity<String> =
-        stripeService.createEphemeralKey(customerId)
-
-    @GetMapping("/customers/{customerId}/default-payment-method")
-    fun checkDefaultPaymentMethod(@PathVariable customerId: String): Boolean {
-        return stripeService.hasDefaultPaymentMethod(customerId)
-    }
 }

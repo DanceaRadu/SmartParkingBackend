@@ -1,5 +1,6 @@
 package com.embeddedsystems.smartparkingbackend.entity
 
+import com.fasterxml.jackson.annotation.JsonBackReference
 import jakarta.persistence.*
 
 @Entity
@@ -19,6 +20,7 @@ data class UserProfile(
     @Column(nullable = false)
     var stripeCustomerId: String? = null,
 
-    @OneToOne
-    var subscription: Subscription? = null,
+    @OneToMany(mappedBy = "userProfile", cascade = [(CascadeType.ALL)])
+    @JsonBackReference
+    var subscriptions: List<Subscription> = listOf(),
 )

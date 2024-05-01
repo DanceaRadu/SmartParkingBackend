@@ -8,7 +8,7 @@ class UserProfileDTO(
     val username: String?,
     val email: String?,
     val stripeCustomerId: String,
-    val subscription: SubscriptionDTO?,
+    val subscriptions: List<SubscriptionDTO> = listOf(),
 ) {
 
     constructor(userProfile: UserProfile): this(
@@ -17,6 +17,6 @@ class UserProfileDTO(
         username = userProfile.username,
         email = userProfile.email,
         stripeCustomerId = userProfile.stripeCustomerId ?: "",
-        subscription = userProfile.subscription?.let { SubscriptionDTO(it) }
+        subscriptions = userProfile.subscriptions.map { SubscriptionDTO(it) },
     )
 }

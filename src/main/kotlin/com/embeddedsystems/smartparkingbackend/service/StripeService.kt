@@ -2,17 +2,16 @@ package com.embeddedsystems.smartparkingbackend.service
 
 import com.embeddedsystems.smartparkingbackend.dto.PaymentInfo
 import com.embeddedsystems.smartparkingbackend.entity.UserProfile
+import com.embeddedsystems.smartparkingbackend.exceptions.types.BadRequestException
 import com.embeddedsystems.smartparkingbackend.exceptions.types.EntityNotFoundByNameException
+import com.embeddedsystems.smartparkingbackend.exceptions.types.EntityNotFoundException
+import com.embeddedsystems.smartparkingbackend.repository.SubscriptionRepository
 import com.embeddedsystems.smartparkingbackend.repository.UserProfileRepository
-import com.stripe.exception.StripeException
 import com.stripe.model.Customer
-import com.stripe.model.EphemeralKey
 import com.stripe.model.Event
 import com.stripe.model.Subscription
 import com.stripe.net.Webhook
 import com.stripe.param.CustomerCreateParams
-import com.stripe.param.CustomerUpdateParams
-import com.stripe.param.EphemeralKeyCreateParams
 import com.stripe.param.SubscriptionCreateParams
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
@@ -21,7 +20,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
 @Service
-class StripeService(private val userProfileRepository: UserProfileRepository) {
+class StripeService(
+    private val userProfileRepository: UserProfileRepository,
+    private val subscriptionRepository: SubscriptionRepository
+) {
 
     @Value("\${stripe.webhook-secret}")
     lateinit var endpointSecret: String
@@ -29,6 +31,8 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
     fun createSubscriptionIntent(paymentInfo: PaymentInfo, keycloakId: String): String {
         val userProfile = userProfileRepository.findByKeycloakId(keycloakId)
             ?: throw EntityNotFoundByNameException("User Profile", keycloakId)
+
+        checkIfSubscriptionCanBeCreated(userProfile, paymentInfo.licensePlate)
 
         val metadata = mapOf(
             "license_plate" to paymentInfo.licensePlate,
@@ -42,44 +46,27 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
                     .setPrice(paymentInfo.priceId)
                     .build()
             )
+            .setPaymentBehavior(SubscriptionCreateParams.PaymentBehavior.DEFAULT_INCOMPLETE)
+            .setPaymentSettings(
+                SubscriptionCreateParams.PaymentSettings.builder()
+                    .setSaveDefaultPaymentMethod(SubscriptionCreateParams.PaymentSettings.SaveDefaultPaymentMethod.ON_SUBSCRIPTION)
+                    .build()
+            )
+            .addExpand("latest_invoice.payment_intent")
             .putAllMetadata(metadata)
             .build()
 
-        return Subscription.create(subscriptionParams).id
-    }
+        val subscription =  Subscription.create(subscriptionParams)
+        subscriptionRepository.save(com.embeddedsystems.smartparkingbackend.entity.Subscription(
+            id = 0,
+            userProfile = userProfile,
+            licencePlate = paymentInfo.licensePlate,
+            isActive = false,
+            stripePriceId = paymentInfo.priceId,
+            stripeSubscriptionId = subscription.id,
+        ))
 
-    fun attachPaymentMethodToCustomer(paymentMethodId: String, keycloakId: String) {
-        val userProfile = userProfileRepository.findByKeycloakId(keycloakId)
-            ?: throw EntityNotFoundByNameException("User Profile", keycloakId)
-
-        val customer: Customer = Customer.retrieve(userProfile.stripeCustomerId)
-
-        try {
-            val params = CustomerUpdateParams.builder()
-                .setInvoiceSettings(
-                    CustomerUpdateParams.InvoiceSettings.builder()
-                        .setDefaultPaymentMethod(paymentMethodId)
-                        .build())
-                .build()
-
-            customer.update(params)
-        } catch (e: StripeException) {
-            e.printStackTrace()
-        }
-    }
-
-    fun createEphemeralKey(customerId: String?): ResponseEntity<String> {
-        try {
-            val params = EphemeralKeyCreateParams.builder()
-                .setCustomer(customerId)
-                .setStripeVersion("2024-04-10")
-                .build()
-
-            val key = EphemeralKey.create(params)
-            return ResponseEntity.ok(key.toJson())
-        } catch (e: StripeException) {
-            return ResponseEntity.status(500).body("Failed to create ephemeral key: " + e.message)
-        }
+        return subscription.latestInvoiceObject.paymentIntentObject.clientSecret
     }
 
     fun createStripeCustomer(userProfile: UserProfile): String {
@@ -101,30 +88,40 @@ class StripeService(private val userProfileRepository: UserProfileRepository) {
         }
 
         val subscription = event.dataObjectDeserializer.`object`.orElse(null) as Subscription
+        val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
+            ?: return ResponseEntity.ok("Event received but local subscription was not found")
 
         when (event.type) {
             "customer.subscription.created" -> {
-                val licensePlate = subscription.metadata["license_plate"]
-                val userId = subscription.metadata["user_id"]
-                println("Created subscription for $userId, with the licence plate $licensePlate")
+                println("Created subscription")
             }
             "customer.subscription.deleted" -> {
-                val licensePlate = subscription.metadata["license_plate"]
-                val userId = subscription.metadata["user_id"]
-                println("Deleted subscription for $userId, with the licence plate $licensePlate")
+                subscriptionRepository.deleteById(localSubscription.id)
             }
             "customer.subscription.updated" -> {
-                val licensePlate = subscription.metadata["license_plate"]
-                val userId = subscription.metadata["user_id"]
-                println("Updated subscription for $userId, with the licence plate $licensePlate")
+                if(subscription.status.uppercase() === "ACTIVE") {
+                    localSubscription.isActive = true
+                    subscriptionRepository.save(localSubscription)
+                }
             }
         }
 
         return ResponseEntity.ok("Event received")
     }
 
-    fun hasDefaultPaymentMethod(customerId: String): Boolean {
-        val customer = Customer.retrieve(customerId)
-        return customer.invoiceSettings.defaultPaymentMethod != null
+    private fun checkIfSubscriptionCanBeCreated(userProfile: UserProfile, licencePlate: String) {
+        userProfile.subscriptions.forEach { subscription ->
+            if(subscription.licencePlate == licencePlate) throw BadRequestException("This user already has a subscription with this licence plate.")
+        }
+    }
+
+    private fun getLocalSubscriptionFromStripeSubscription(subscription: Subscription): com.embeddedsystems.smartparkingbackend.entity.Subscription? {
+        val licensePlate = subscription.metadata["license_plate"]
+        val userId = subscription.metadata["user_id"]
+
+        if(licensePlate.isNullOrEmpty() || userId.isNullOrEmpty()) throw BadRequestException("User id or licence plate is null")
+
+        val user = userProfileRepository.findById(userId.toLong()).orElseThrow { EntityNotFoundException("User Profile", userId.toLong()) }
+        return user.subscriptions.find { it.stripeSubscriptionId == subscription.id }
     }
 }

@@ -19,4 +19,8 @@ class ParkingConfigController(private val parkingConfigService: ParkingConfigSer
     @PostMapping
     fun updateCurrentParkingConfig(@RequestBody parkingConfigDTO: ParkingConfigDTO) =
         parkingConfigService.updateCurrentParkingConfig(parkingConfigDTO)
+
+    @GetMapping("plates")
+    fun getActiveLicensePlates() =
+        parkingConfigService.getActiveLicencePlates()
 }
