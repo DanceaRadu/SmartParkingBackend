@@ -2,6 +2,7 @@ package com.embeddedsystems.smartparkingbackend.entity
 
 import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
+import java.sql.Timestamp
 
 @Entity
 data class Subscription(
@@ -21,4 +22,6 @@ data class Subscription(
 
     @Column(unique = true)
     var stripeSubscriptionId: String,
+
+    var validThru: Timestamp? = null
 )

@@ -1,6 +1,7 @@
 package com.embeddedsystems.smartparkingbackend.dto
 
 import com.embeddedsystems.smartparkingbackend.entity.Subscription
+import java.time.Instant
 
 class SubscriptionDTO(
     val id: Long?,
@@ -9,6 +10,7 @@ class SubscriptionDTO(
     var isActive: Boolean,
     var stripePriceId: String,
     var stripeSubscriptionId: String,
+    var validThru: Instant? = null
 ) {
     constructor(subscription: Subscription): this(
         id = subscription.id,
@@ -16,6 +18,7 @@ class SubscriptionDTO(
         licencePlate = subscription.licencePlate,
         isActive = subscription.isActive,
         stripePriceId = subscription.stripePriceId,
-        stripeSubscriptionId = subscription.stripeSubscriptionId
+        stripeSubscriptionId = subscription.stripeSubscriptionId,
+        validThru = subscription.validThru?.toInstant()
     )
 }

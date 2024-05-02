@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 
 @Service
 class StripeService(
@@ -113,6 +114,7 @@ class StripeService(
                         val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
                             ?: return ResponseEntity.ok("Event received but local subscription was not found")
                         localSubscription.isActive = true
+                        localSubscription.validThru = Timestamp(subscription.currentPeriodEnd)
                         subscriptionRepository.save(localSubscription)
                     }
                 } else {
