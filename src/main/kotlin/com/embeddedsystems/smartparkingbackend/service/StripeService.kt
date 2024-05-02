@@ -87,21 +87,36 @@ class StripeService(
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Webhook error: ${e.message}")
         }
 
-        val subscription = event.dataObjectDeserializer.`object`.orElse(null) as Subscription
-        val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
-            ?: return ResponseEntity.ok("Event received but local subscription was not found")
-
         when (event.type) {
             "customer.subscription.created" -> {
-                println("Created subscription")
+                val subscription = event.dataObjectDeserializer.`object`.orElse(null) as? Subscription
+                if (subscription != null) {
+                    println("Created subscription")
+                } else {
+                    return ResponseEntity.ok("Event received but subscription object was null or of unexpected type")
+                }
             }
             "customer.subscription.deleted" -> {
-                subscriptionRepository.deleteById(localSubscription.id)
+                val subscription = event.dataObjectDeserializer.`object`.orElse(null) as? Subscription
+                if (subscription != null) {
+                    val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
+                        ?: return ResponseEntity.ok("Event received but local subscription was not found")
+                    subscriptionRepository.deleteById(localSubscription.id)
+                } else {
+                    return ResponseEntity.ok("Event received but subscription object was null or of unexpected type")
+                }
             }
             "customer.subscription.updated" -> {
-                if(subscription.status.uppercase() === "ACTIVE") {
-                    localSubscription.isActive = true
-                    subscriptionRepository.save(localSubscription)
+                val subscription = event.dataObjectDeserializer.`object`.orElse(null) as? Subscription
+                if (subscription != null) {
+                    if (subscription.status.uppercase() == "ACTIVE") {
+                        val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
+                            ?: return ResponseEntity.ok("Event received but local subscription was not found")
+                        localSubscription.isActive = true
+                        subscriptionRepository.save(localSubscription)
+                    }
+                } else {
+                    return ResponseEntity.ok("Event received but subscription object was null or of unexpected type")
                 }
             }
         }
