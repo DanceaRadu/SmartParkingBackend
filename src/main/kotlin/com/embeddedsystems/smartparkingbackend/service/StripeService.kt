@@ -114,7 +114,7 @@ class StripeService(
                         val localSubscription = getLocalSubscriptionFromStripeSubscription(subscription)
                             ?: return ResponseEntity.ok("Event received but local subscription was not found")
                         localSubscription.isActive = true
-                        localSubscription.validThru = Timestamp(subscription.currentPeriodEnd)
+                        localSubscription.validThru = Timestamp(subscription.currentPeriodEnd * 1000)
                         subscriptionRepository.save(localSubscription)
                     }
                 } else {
