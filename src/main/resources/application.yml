@@ -24,3 +24,5 @@ stripe:
   public-key: key
   secret-key: key
   webhook-secret: key
+predictor:
+  url: http://localhost:5000

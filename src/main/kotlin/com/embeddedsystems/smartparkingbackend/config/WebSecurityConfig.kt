@@ -46,6 +46,8 @@ class WebSecurityConfig {
                     .requestMatchers("/api/v1/parking-config/**").permitAll()
                     .requestMatchers("/config/**").permitAll()
 
+                    .requestMatchers("/api/v1/predict/**").permitAll()
+
                     .requestMatchers(HttpMethod.GET, "/**").permitAll()
                     .anyRequest().authenticated()
             }
