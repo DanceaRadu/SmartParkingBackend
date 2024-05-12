@@ -20,19 +20,15 @@ class PredictorService {
     lateinit var predictorUrl: String
     var restTemplate = RestTemplate()
 
-    fun predict(predictionRequest: PredictionRequestDTO): Map<String, Int> {
+    fun predict(predictionRequest: PredictionRequestDTO): Map<String, Double> {
         predictionRequest.date ?: throw BadRequestException("Date is required for interval prediction")
-        return mapProbabilityToParkingSpots(
-            sendRequest("$predictorUrl/predict", predictionRequest)
-        )
+        return sendRequest("$predictorUrl/predict", predictionRequest)
     }
 
-    fun predictUsingInterval(predictionRequest: PredictionRequestDTO): Map<String, Int> {
+    fun predictUsingInterval(predictionRequest: PredictionRequestDTO): Map<String, Double> {
         predictionRequest.start ?: throw BadRequestException("Start date is required for interval prediction")
         predictionRequest.end ?: throw BadRequestException("End date is required for interval prediction")
-        return mapProbabilityToParkingSpots(
-            sendRequest("$predictorUrl/predict/interval", predictionRequest)
-        )
+        return sendRequest("$predictorUrl/predict/interval", predictionRequest)
     }
 
     private fun sendRequest(url: String, predictionRequest: PredictionRequestDTO): Map<String, Double> {
